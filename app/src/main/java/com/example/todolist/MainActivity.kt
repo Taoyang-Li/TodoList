@@ -6,12 +6,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import android.text.Editable
 import android.text.TextWatcher
-import android.widget.TextView
-import androidx.recyclerview.widget.DividerItemDecoration
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var todoAdapter: TodoAdapter
+    private val allTodos = mutableListOf<Todo>() // 存储所有待办事项
     private var currentFontSize = 18f // 默认字体大小
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,34 +22,31 @@ class MainActivity : AppCompatActivity() {
 
         // 初始化适配器
         todoAdapter = TodoAdapter(mutableListOf())
-
         rvTodoItems.adapter = todoAdapter
         rvTodoItems.layoutManager = LinearLayoutManager(this)
-
 
         // 添加待办事项
         btnAddTodo.setOnClickListener {
             val todoTitle = etTodoTitle.text.toString()
             if (todoTitle.isNotEmpty()) {
                 val todo = Todo(todoTitle)
-                todoAdapter.addTodo(todo)
+                allTodos.add(todo) // 添加到所有待办事项列表
+                todoAdapter.addTodo(todo) // 添加到当前显示的适配器中
                 etTodoTitle.text.clear()
             }
         }
 
         // 删除已完成的待办事项
         btnDeleteDoneTodo.setOnClickListener {
-            todoAdapter.deleteDoneTodos()
+            allTodos.removeAll { it.isDone } // 从完整列表中移除已完成的项
+            todoAdapter.deleteDoneTodos() // 更新适配器显示
         }
 
         // 搜索功能
         etSearchTodo.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val filteredTodos = todoAdapter.getTodos().filter {
-                    it.title.contains(s.toString(), ignoreCase = true)
-                }
-                todoAdapter.updateTodos(filteredTodos)
+                filterTodos(s.toString())
             }
             override fun afterTextChanged(s: Editable?) {}
         })
@@ -59,6 +55,18 @@ class MainActivity : AppCompatActivity() {
         btnAdjustFontSize.setOnClickListener {
             adjustGlobalFontSize()
         }
+    }
+
+    /**
+     * 根据搜索条件过滤待办事项
+     */
+    private fun filterTodos(query: String) {
+        val filteredTodos = if (query.isEmpty()) {
+            allTodos // 如果搜索框为空，显示所有待办事项
+        } else {
+            allTodos.filter { it.title.contains(query, ignoreCase = true) } // 过滤包含关键字的待办事项
+        }
+        todoAdapter.updateTodos(filteredTodos) // 更新适配器显示内容
     }
 
     /**
@@ -75,18 +83,8 @@ class MainActivity : AppCompatActivity() {
         etSearchTodo.textSize = currentFontSize
 
         // 设置标题字体大小
-        if (tvTodoListTitle is TextView) {
-            (tvTodoListTitle as TextView).textSize = currentFontSize
-        } else {
-            // 如果不是 TextView，可以选择跳过或者处理异常情况
-            println("tvTodoListTitle is not a TextView")
-        }
-
-        supportActionBar?.title = "TodoList"
-        val toolbarTitle = findViewById<TextView>(R.id.tvTodoListTitle) // 自定义标题
-        toolbarTitle?.textSize = currentFontSize
-
-
+        tvTodoListTitle.textSize = currentFontSize
+        tvWorkTitle.textSize = currentFontSize
 
         // 设置按钮字体大小
         btnAddTodo.textSize = currentFontSize

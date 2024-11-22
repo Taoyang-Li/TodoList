@@ -76,9 +76,9 @@ class TodoAdapter(
     }
 
     // New method: Update the list of todos (e.g., for filtering)
-    fun updateTodos(filteredTodos: List<Todo>) {
-        todos.clear()
-        todos.addAll(filteredTodos)
-        notifyDataSetChanged()
+    fun updateTodos(newTodos: List<Todo>) {
+        todos.clear() // 清空当前显示的列表
+        todos.addAll(newTodos) // 添加过滤后的数据
+        notifyDataSetChanged() // 通知适配器刷新数据
     }
 }
