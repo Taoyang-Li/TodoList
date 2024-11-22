@@ -6,17 +6,26 @@
     android:paddingStart="8dp"
     android:paddingEnd="8dp">
 
+    <!-- 完成状态 CheckBox -->
+    <CheckBox
+        android:id="@+id/cbDone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
     <!-- 待办事项标题 -->
     <TextView
         android:id="@+id/tvTodoTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Sample Todo"
-        android:textSize="36px"
+        android:textSize="24sp"
         android:padding="8dp"
         android:layout_marginBottom="4dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/cbDone"
+        app:layout_constraintStart_toEndOf="@+id/cbDone"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -27,15 +36,6 @@
         android:background="#CCCCCC"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- 完成状态 CheckBox -->
-    <CheckBox
-        android:id="@+id/cbDone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

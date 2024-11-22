@@ -68,7 +68,6 @@
 
 
 
-
         <!-- Add Todo button -->
         <Button
             android:id="@+id/btnAddTodo"
