@@ -6,12 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.item_todo.view.*
 
 class TodoAdapter(
     private val todos: MutableList<Todo>
 ) : RecyclerView.Adapter<TodoAdapter.TodoViewHolder>() {
+
+    private var fontSize: Float = 18f
 
     class TodoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
@@ -26,7 +27,7 @@ class TodoAdapter(
     }
 
     private fun toggleStrikeThrough(tvTodoTitle: TextView, isChecked: Boolean) {
-        if(isChecked) {
+        if (isChecked) {
             tvTodoTitle.paintFlags = tvTodoTitle.paintFlags or STRIKE_THRU_TEXT_FLAG
         } else {
             tvTodoTitle.paintFlags = tvTodoTitle.paintFlags and STRIKE_THRU_TEXT_FLAG.inv()
@@ -35,30 +36,49 @@ class TodoAdapter(
 
     fun addTodo(todo: Todo) {
         todos.add(todo)
-        notifyItemInserted(todos.size -1)
+        notifyItemInserted(todos.size - 1)
     }
 
     fun deleteDoneTodos() {
         todos.removeAll { todo ->
-            todo.isChecked
+            todo.isDone
         }
         notifyDataSetChanged()
     }
+
+    fun setGlobalFontSize(size: Float) {
+        fontSize = size
+        notifyDataSetChanged()
+    }
+
 
     override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
         val curTodo = todos[position]
         holder.itemView.apply {
             tvTodoTitle.text = curTodo.title
-            cbDone.isChecked = curTodo.isChecked
-            toggleStrikeThrough(tvTodoTitle, curTodo.isChecked)
+            tvTodoTitle.textSize = fontSize
+            cbDone.isChecked = curTodo.isDone
+            toggleStrikeThrough(tvTodoTitle, curTodo.isDone)
             cbDone.setOnCheckedChangeListener { _, isChecked ->
                 toggleStrikeThrough(tvTodoTitle, isChecked)
-                curTodo.isChecked = !curTodo.isChecked
+                curTodo.isDone = isChecked
             }
         }
     }
 
     override fun getItemCount(): Int {
         return todos.size
+    }
+
+    // New method: Get the complete list of todos
+    fun getTodos(): List<Todo> {
+        return todos
+    }
+
+    // New method: Update the list of todos (e.g., for filtering)
+    fun updateTodos(filteredTodos: List<Todo>) {
+        todos.clear()
+        todos.addAll(filteredTodos)
+        notifyDataSetChanged()
     }
 }
