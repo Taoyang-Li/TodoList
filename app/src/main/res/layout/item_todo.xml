@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp">
+    android:layout_height="wrap_content"
+    android:padding="8dp">
 
-    <!-- 完成状态 CheckBox -->
+    <!-- Completion Status CheckBox -->
     <CheckBox
         android:id="@+id/cbDone"
         android:layout_width="wrap_content"
@@ -15,25 +15,46 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- 待办事项标题 -->
+    <!-- Todo Title -->
     <TextView
         android:id="@+id/tvTodoTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Sample Todo"
-        android:textSize="24sp"
-        android:padding="8dp"
-        android:layout_marginBottom="4dp"
-        app:layout_constraintStart_toEndOf="@+id/cbDone"
+        android:text="Sample Todo Title"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:maxLines="1"
+        android:ellipsize="end"
+        app:layout_constraintStart_toEndOf="@id/cbDone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/spinnerCategory" />
+
+    <!-- Todo Category Spinner -->
+    <Spinner
+        android:id="@+id/spinnerCategory"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tvTodoTitle"
+        app:layout_constraintEnd_toEndOf="@id/tvTodoTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvTodoTitle"
+        app:layout_constraintBottom_toTopOf="@id/spinnerPriority" />
+
+    <!-- Todo Priority Spinner -->
+    <Spinner
+        android:id="@+id/spinnerPriority"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="@id/tvTodoTitle"
+        app:layout_constraintEnd_toEndOf="@id/tvTodoTitle"
+        app:layout_constraintTop_toBottomOf="@id/spinnerCategory"
         app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- 分割线 -->
+    <!-- Divider Line -->
     <View
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:background="#CCCCCC"
+        android:background="#E0E0E0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />

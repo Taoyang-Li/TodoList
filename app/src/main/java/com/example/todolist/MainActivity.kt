@@ -6,91 +6,263 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
+import android.app.TimePickerDialog
+import android.app.DatePickerDialog
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var todoAdapter: TodoAdapter
-    private val allTodos = mutableListOf<Todo>() // 存储所有待办事项
-    private var currentFontSize = 18f // 默认字体大小
+    private val allTodos = mutableListOf<Todo>() // All tasks
+    private var currentFontSize = 18f
+    private var currentCategory: TodoCategory? = null
+    private var currentPriority: TodoPriority? = null
+    private var selectedReminderTime: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 隐藏 ActionBar
+        // hide ActionBar
         supportActionBar?.hide()
 
-        // 初始化适配器
+        // initial RecyclerView
         todoAdapter = TodoAdapter(mutableListOf())
         rvTodoItems.adapter = todoAdapter
         rvTodoItems.layoutManager = LinearLayoutManager(this)
 
-        // 添加待办事项
+        // Category Spinner
+        setupCategorySpinner()
+
+        // priority Spinner
+        setupPrioritySpinner()
+
+        // Add button
         btnAddTodo.setOnClickListener {
-            val todoTitle = etTodoTitle.text.toString()
-            if (todoTitle.isNotEmpty()) {
-                val todo = Todo(todoTitle)
-                allTodos.add(todo) // 添加到所有待办事项列表
-                todoAdapter.addTodo(todo) // 添加到当前显示的适配器中
-                etTodoTitle.text.clear()
-            }
+            addTodo()
         }
 
-        // 删除已完成的待办事项
+        // Delete button
         btnDeleteDoneTodo.setOnClickListener {
-            allTodos.removeAll { it.isDone } // 从完整列表中移除已完成的项
-            todoAdapter.deleteDoneTodos() // 更新适配器显示
+            deleteDoneTodos()
         }
 
-        // 搜索功能
+        // search box
         etSearchTodo.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                filterTodos(s.toString())
+                applyFilters(s.toString())
             }
+
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // 调节全局字体大小
+        // Change font size
         btnAdjustFontSize.setOnClickListener {
             adjustGlobalFontSize()
         }
-    }
 
-    /**
-     * 根据搜索条件过滤待办事项
-     */
-    private fun filterTodos(query: String) {
-        val filteredTodos = if (query.isEmpty()) {
-            allTodos // 如果搜索框为空，显示所有待办事项
-        } else {
-            allTodos.filter { it.title.contains(query, ignoreCase = true) } // 过滤包含关键字的待办事项
+        // Set Reminder CheckBox
+        checkBoxReminder.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                showDateTimePickerDialog()
+            } else {
+                selectedReminderTime = null // clear reminder time
+            }
         }
-        todoAdapter.updateTodos(filteredTodos) // 更新适配器显示内容
     }
 
     /**
-     * 调节全局字体大小
+     * initial category Spinner
+     */
+    private fun setupCategorySpinner() {
+        val categoryAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.todo_categories,
+            android.R.layout.simple_spinner_item
+        )
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategory.adapter = categoryAdapter
+        spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                currentCategory = if (position > 0) TodoCategory.values()[position - 1] else null
+                applyFilters()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                currentCategory = null
+                applyFilters()
+            }
+        }
+    }
+
+    /**
+     * initial priority Spinner
+     */
+    private fun setupPrioritySpinner() {
+        val priorityAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.todo_priorities,
+            android.R.layout.simple_spinner_item
+        )
+        priorityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPriority.adapter = priorityAdapter
+        spinnerPriority.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                currentPriority = if (position > 0) TodoPriority.values()[position - 1] else null
+                applyFilters()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                currentPriority = null
+                applyFilters()
+            }
+        }
+    }
+
+    /**
+     * add new tasks
+     */
+    private fun addTodo() {
+        val todoTitle = etTodoTitle.text.toString().trim()
+
+        if (todoTitle.isEmpty()) {
+            Toast.makeText(this, "Please enter a valid task title", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val category = currentCategory ?: TodoCategory.PERSONAL
+        val priority = currentPriority ?: TodoPriority.LOW
+
+        val todo = Todo(
+            title = todoTitle,
+            category = category,
+            priority = priority,
+            reminderTime = selectedReminderTime // 保存用户选择的日期时间
+        )
+
+        if (checkBoxReminder.isChecked && selectedReminderTime != null) {
+            setReminder(todo)
+        }
+
+        allTodos.add(todo)
+        todoAdapter.addTodo(todo)
+        etTodoTitle.text.clear()
+        selectedReminderTime = null // Clear reminder time
+    }
+
+    /**
+     * Delete completed tasks
+     */
+    private fun deleteDoneTodos() {
+        allTodos.removeAll { it.isChecked }
+        todoAdapter.deleteDoneTodos()
+    }
+
+    /**
+     * filter tasks
+     */
+    private fun applyFilters(query: String = "") {
+        var filteredTodos = if (query.isEmpty()) {
+            allTodos
+        } else {
+            allTodos.filter { it.title.contains(query, ignoreCase = true) }
+        }
+
+        currentCategory?.let { category ->
+            filteredTodos = filteredTodos.filter { it.category == category }
+        }
+
+        currentPriority?.let { priority ->
+            filteredTodos = filteredTodos.filter { it.priority == priority }
+        }
+
+        todoAdapter.updateTodos(filteredTodos)
+    }
+
+    /**
+     * Show selection of time and date
+     */
+    private fun showDateTimePickerDialog() {
+        val calendar = Calendar.getInstance()
+
+        // date selection
+        val datePickerDialog = DatePickerDialog(this, { _, year, month, dayOfMonth ->
+            // set up chosen date
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, month)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+            // time selection
+            val timePickerDialog = TimePickerDialog(this, { _, hourOfDay, minute ->
+                // setup chosen time
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0)
+
+                selectedReminderTime = calendar.timeInMillis
+                val formattedTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(calendar.time)
+                Toast.makeText(this, "Reminder set for $formattedTime", Toast.LENGTH_SHORT).show()
+            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true)
+
+            timePickerDialog.show()
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+
+        datePickerDialog.show()
+    }
+
+    /**
+     * setup task reminder
+     */
+    private fun setReminder(todo: Todo) {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MINUTE, 1) // Set the alarm for 1 minute ahead
+        selectedReminderTime = calendar.timeInMillis // Update the selected reminder time
+
+        selectedReminderTime?.let { reminderTime ->
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(this, ReminderBroadcastReceiver::class.java).apply {
+                putExtra("TODO_TITLE", todo.title)
+            }
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                this,
+                todo.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                reminderTime,
+                pendingIntent
+            )
+
+            val formattedTime = Todo.formattedReminderTime(reminderTime)
+            Toast.makeText(this, "Reminder is set for $formattedTime", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    /**
+     * change font size
      */
     private fun adjustGlobalFontSize() {
-        // 增大字体大小
         currentFontSize += 2f
         if (currentFontSize > 30f) {
-            currentFontSize = 18f // 超过最大值时重置为默认大小
+            currentFontSize = 18f
         }
 
-        // 设置搜索框字体大小
         etSearchTodo.textSize = currentFontSize
-
-        // 设置标题字体大小
-        tvTodoListTitle.textSize = currentFontSize
-        tvWorkTitle.textSize = currentFontSize
-
-        // 设置按钮字体大小
-        btnAddTodo.textSize = currentFontSize
-        btnDeleteDoneTodo.textSize = currentFontSize
-
-        // 更新适配器以调整待办事项字体
         todoAdapter.setGlobalFontSize(currentFontSize)
     }
 }

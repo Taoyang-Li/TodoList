@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">TodoList</string>
+    <string-array name="todo_categories">
+        <item>Select Category</item>
+        <item>PERSONAL</item>
+        <item>WORK</item>
+        <item>URGENT</item>
+        <item>SHOPPING</item>
+        <item>OTHER</item>
+    </string-array>
+    <string-array name="todo_priorities">
+        <item>Select Priority</item>
+        <item>LOW</item>
+        <item>MEDIUM</item>
+        <item>HIGH</item>
+    </string-array>
 </resources>
+
+
