@@ -23,6 +23,13 @@
             </intent-filter>
         </activity>
 
+
+        <activity
+            android:name=".UserProfileActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+
+
         <!-- Add the ReminderBroadcastReceiver -->
         <receiver
             android:name=".ReminderBroadcastReceiver"

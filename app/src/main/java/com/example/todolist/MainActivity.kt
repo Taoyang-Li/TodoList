@@ -1,5 +1,6 @@
 package com.example.todolist
 
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -32,31 +33,29 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // hide ActionBar
+        // Hide ActionBar
         supportActionBar?.hide()
 
-        // initial RecyclerView
+        // Initialize RecyclerView
         todoAdapter = TodoAdapter(mutableListOf())
         rvTodoItems.adapter = todoAdapter
         rvTodoItems.layoutManager = LinearLayoutManager(this)
 
-        // Category Spinner
+        // Setup category and priority spinners
         setupCategorySpinner()
-
-        // priority Spinner
         setupPrioritySpinner()
 
-        // Add button
+        // Add task button
         btnAddTodo.setOnClickListener {
             addTodo()
         }
 
-        // Delete button
+        // Delete completed tasks button
         btnDeleteDoneTodo.setOnClickListener {
             deleteDoneTodos()
         }
 
-        // search box
+        // Search bar text listener
         etSearchTodo.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -66,23 +65,30 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Change font size
+        // Adjust font size button
         btnAdjustFontSize.setOnClickListener {
             adjustGlobalFontSize()
         }
 
-        // Set Reminder CheckBox
+        // Set reminder checkbox
         checkBoxReminder.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 showDateTimePickerDialog()
             } else {
-                selectedReminderTime = null // clear reminder time
+                selectedReminderTime = null // Clear reminder time
             }
+        }
+
+        // Set up user profile button
+        val iconUserProfile = findViewById<ImageView>(R.id.iconUserProfile)
+        iconUserProfile.setOnClickListener {
+            val intent = Intent(this, UserProfileActivity::class.java)
+            startActivity(intent)
         }
     }
 
     /**
-     * initial category Spinner
+     * Setup category spinner
      */
     private fun setupCategorySpinner() {
         val categoryAdapter = ArrayAdapter.createFromResource(
@@ -106,7 +112,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * initial priority Spinner
+     * Setup priority spinner
      */
     private fun setupPrioritySpinner() {
         val priorityAdapter = ArrayAdapter.createFromResource(
@@ -130,7 +136,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * add new tasks
+     * Add a new task
      */
     private fun addTodo() {
         val todoTitle = etTodoTitle.text.toString().trim()
@@ -147,7 +153,7 @@ class MainActivity : AppCompatActivity() {
             title = todoTitle,
             category = category,
             priority = priority,
-            reminderTime = selectedReminderTime // 保存用户选择的日期时间
+            reminderTime = selectedReminderTime
         )
 
         if (checkBoxReminder.isChecked && selectedReminderTime != null) {
@@ -157,7 +163,7 @@ class MainActivity : AppCompatActivity() {
         allTodos.add(todo)
         todoAdapter.addTodo(todo)
         etTodoTitle.text.clear()
-        selectedReminderTime = null // Clear reminder time
+        selectedReminderTime = null
     }
 
     /**
@@ -169,7 +175,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * filter tasks
+     * Filter tasks
      */
     private fun applyFilters(query: String = "") {
         var filteredTodos = if (query.isEmpty()) {
@@ -190,21 +196,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Show selection of time and date
+     * Show date and time picker dialog
      */
     private fun showDateTimePickerDialog() {
         val calendar = Calendar.getInstance()
 
-        // date selection
+        // Date picker
         val datePickerDialog = DatePickerDialog(this, { _, year, month, dayOfMonth ->
-            // set up chosen date
             calendar.set(Calendar.YEAR, year)
             calendar.set(Calendar.MONTH, month)
             calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
 
-            // time selection
+            // Time picker
             val timePickerDialog = TimePickerDialog(this, { _, hourOfDay, minute ->
-                // setup chosen time
                 calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                 calendar.set(Calendar.MINUTE, minute)
                 calendar.set(Calendar.SECOND, 0)
@@ -221,13 +225,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * setup task reminder
+     * Set a task reminder
      */
     private fun setReminder(todo: Todo) {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.MINUTE, 1) // Set the alarm for 1 minute ahead
-        selectedReminderTime = calendar.timeInMillis // Update the selected reminder time
-
         selectedReminderTime?.let { reminderTime ->
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val intent = Intent(this, ReminderBroadcastReceiver::class.java).apply {
@@ -241,20 +241,14 @@ class MainActivity : AppCompatActivity() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                reminderTime,
-                pendingIntent
-            )
-
-            val formattedTime = Todo.formattedReminderTime(reminderTime)
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, reminderTime, pendingIntent)
+            val formattedTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(reminderTime)
             Toast.makeText(this, "Reminder is set for $formattedTime", Toast.LENGTH_SHORT).show()
         }
     }
 
-
     /**
-     * change font size
+     * Adjust global font size
      */
     private fun adjustGlobalFontSize() {
         currentFontSize += 2f
