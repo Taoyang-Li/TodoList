@@ -32,6 +32,10 @@ android {
         jvmTarget = '1.8'
     }
     namespace 'com.example.todolist'
+    viewBinding {
+        enabled = true
+    }
+
 }
 
 dependencies {
