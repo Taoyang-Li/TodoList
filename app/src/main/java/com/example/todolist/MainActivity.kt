@@ -4,7 +4,6 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.activity_main.*
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -17,11 +16,13 @@ import android.content.Intent
 import android.widget.Toast
 import android.app.TimePickerDialog
 import android.app.DatePickerDialog
+import com.example.todolist.databinding.ActivityMainBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
     private lateinit var todoAdapter: TodoAdapter
     private val allTodos = mutableListOf<Todo>() // All tasks
     private var currentFontSize = 18f
@@ -31,32 +32,35 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        // Initialize View Binding
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Hide ActionBar
         supportActionBar?.hide()
 
         // Initialize RecyclerView
         todoAdapter = TodoAdapter(mutableListOf())
-        rvTodoItems.adapter = todoAdapter
-        rvTodoItems.layoutManager = LinearLayoutManager(this)
+        binding.rvTodoItems.adapter = todoAdapter
+        binding.rvTodoItems.layoutManager = LinearLayoutManager(this)
 
         // Setup category and priority spinners
         setupCategorySpinner()
         setupPrioritySpinner()
 
         // Add task button
-        btnAddTodo.setOnClickListener {
+        binding.btnAddTodo.setOnClickListener {
             addTodo()
         }
 
         // Delete completed tasks button
-        btnDeleteDoneTodo.setOnClickListener {
+        binding.btnDeleteDoneTodo.setOnClickListener {
             deleteDoneTodos()
         }
 
         // Search bar text listener
-        etSearchTodo.addTextChangedListener(object : TextWatcher {
+        binding.etSearchTodo.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 applyFilters(s.toString())
@@ -66,12 +70,12 @@ class MainActivity : AppCompatActivity() {
         })
 
         // Adjust font size button
-        btnAdjustFontSize.setOnClickListener {
+        binding.btnAdjustFontSize.setOnClickListener {
             adjustGlobalFontSize()
         }
 
         // Set reminder checkbox
-        checkBoxReminder.setOnCheckedChangeListener { _, isChecked ->
+        binding.checkBoxReminder.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 showDateTimePickerDialog()
             } else {
@@ -80,8 +84,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Set up user profile button
-        val iconUserProfile = findViewById<ImageView>(R.id.iconUserProfile)
-        iconUserProfile.setOnClickListener {
+        binding.iconUserProfile.setOnClickListener {
             val intent = Intent(this, UserProfileActivity::class.java)
             startActivity(intent)
         }
@@ -97,8 +100,8 @@ class MainActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_item
         )
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerCategory.adapter = categoryAdapter
-        spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.spinnerCategory.adapter = categoryAdapter
+        binding.spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 currentCategory = if (position > 0) TodoCategory.values()[position - 1] else null
                 applyFilters()
@@ -121,8 +124,8 @@ class MainActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_item
         )
         priorityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerPriority.adapter = priorityAdapter
-        spinnerPriority.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        binding.spinnerPriority.adapter = priorityAdapter
+        binding.spinnerPriority.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 currentPriority = if (position > 0) TodoPriority.values()[position - 1] else null
                 applyFilters()
@@ -139,7 +142,7 @@ class MainActivity : AppCompatActivity() {
      * Add a new task
      */
     private fun addTodo() {
-        val todoTitle = etTodoTitle.text.toString().trim()
+        val todoTitle = binding.etTodoTitle.text.toString().trim()
 
         if (todoTitle.isEmpty()) {
             Toast.makeText(this, "Please enter a valid task title", Toast.LENGTH_SHORT).show()
@@ -156,13 +159,13 @@ class MainActivity : AppCompatActivity() {
             reminderTime = selectedReminderTime
         )
 
-        if (checkBoxReminder.isChecked && selectedReminderTime != null) {
+        if (binding.checkBoxReminder.isChecked && selectedReminderTime != null) {
             setReminder(todo)
         }
 
         allTodos.add(todo)
         todoAdapter.addTodo(todo)
-        etTodoTitle.text.clear()
+        binding.etTodoTitle.text.clear()
         selectedReminderTime = null
     }
 
@@ -256,7 +259,7 @@ class MainActivity : AppCompatActivity() {
             currentFontSize = 18f
         }
 
-        etSearchTodo.textSize = currentFontSize
+        binding.etSearchTodo.textSize = currentFontSize
         todoAdapter.setGlobalFontSize(currentFontSize)
     }
 }
